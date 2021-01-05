@@ -4,7 +4,7 @@
   "description": "A JavaScript library for abstracting metadata storage for datapackage.json packages",
   "main": "dist/index.js",
   "scripts": {
-    "test": "yarn run test",
+    "test": "nyc mocha --require @babel/register test/*",
     "build": "rm -rf ./dist/node && babel ./src/ -d ./dist/node --no-comments",
     "coveralls": "cat ./coverage/lcov.info | ./node_modules/.bin/coveralls",
     "coverage": "nyc report --reporter=text-lcov | coveralls && nyc report --reporter=lcov",
