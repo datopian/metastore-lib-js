@@ -8,7 +8,9 @@
     "build": "rm -rf ./dist/node && babel ./src/ -d ./dist/node --no-comments",
     "coveralls": "cat ./coverage/lcov.info | ./node_modules/.bin/coveralls",
     "coverage": "nyc report --reporter=text-lcov | coveralls && nyc report --reporter=lcov",
-    "lint": "eslint ./src"
+    "lint": "eslint ./src",
+    "prepublishOnly": "npm run build",
+    "publish": "npm publish"
   },
   "repository": {
     "type": "git",
