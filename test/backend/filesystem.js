@@ -10,10 +10,10 @@ before(async () => {
   fs.mkdirSync(basePath)
 })
 
-// after(async () => {
-//   let basePath = path.join(process.cwd(), 'tmp')
-//   fs.rmdirSync(basePath, { recursive: true })
-// })
+after(async () => {
+  let basePath = path.join(process.cwd(), 'tmp')
+  fs.rmdirSync(basePath, { recursive: true })
+})
 
 function createTestDatapackage(name, ...props) {
   let object = {
