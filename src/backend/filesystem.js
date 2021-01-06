@@ -12,14 +12,15 @@ class FilesystemStorage extends StorageBackend {
     this._defaultAuthor = defaultAuthor
   }
 
-  create(objectId, metadata, author, message) {
+  create(objectId, metadata = {}, author, message = '') {
     const packageDir = this._getObjectPath(objectId)
     try {
       fs.mkdirSync(packageDir)
     } catch (error) {
       throw new Error(`EEXIST: file ${objectId} already exists`)
     }
-    const revision = this._makeRevisionId()
+    const revisionId = this._makeRevisionId()
+    metadata.revision = 0
     try {
       let filename = path.join(packageDir, 'datapackage.json')
       fs.writeFileSync(filename, JSON.stringify(metadata))
@@ -28,7 +29,48 @@ class FilesystemStorage extends StorageBackend {
     }
     const objectInfo = this._getObjectInfo(
       objectId,
-      revision,
+      revisionId,
+      author,
+      message,
+      metadata
+    )
+    return objectInfo
+  }
+
+  fetch(objectId) {
+    const filePath = path.join(
+      process.cwd(),
+      'tmp',
+      objectId,
+      'datapackage.json'
+    )
+    let datapackage
+    try {
+      datapackage = JSON.parse(fs.readFileSync(filePath))
+    } catch (error) {
+      throw new Error('ENOENT: no such file or directory')
+    }
+    return datapackage
+  }
+
+  update(objectId, metadata = {}, author, partial = false, message = '') {
+    let currentObject = this.fetch(objectId)
+    const packageDir = this._getObjectPath(objectId)
+    const revisionId = this._makeRevisionId()
+
+    metadata = { ...currentObject, ...metadata }
+    metadata.revision = metadata.revision += 1
+
+    try {
+      let filename = path.join(packageDir, 'datapackage.json')
+      fs.writeFileSync(filename, JSON.stringify(metadata))
+    } catch (error) {
+      console.log(error)
+    }
+
+    const objectInfo = this._getObjectInfo(
+      objectId,
+      revisionId,
       author,
       message,
       metadata
