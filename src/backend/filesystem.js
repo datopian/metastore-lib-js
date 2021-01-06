@@ -4,6 +4,13 @@ import path from 'path'
 const fs = require('fs')
 import { v4 as uuidv4 } from 'uuid'
 
+/**
+ * Abstract filesystem based storage based on Node FileSystem
+ * This storage backend is useful mostly in testing, especially with the.
+ *  You most likely shouldn't be using it in production,
+ *  unless you know exactly what you are doing. This backend does not guarantee
+ *  consistency of storage, and using it in concurrent environments may cause issues.
+ */
 class FilesystemStorage extends StorageBackend {
   constructor(uri = '', defaultAuthor) {
     super()
