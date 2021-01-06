@@ -8,3 +8,5 @@ src
 docs/
 __tests__/
 scripts/
+tmp
+temp.py

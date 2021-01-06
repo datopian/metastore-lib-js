@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "test": "nyc mocha --require @babel/register test/*",
-    "build": "rm -rf ./dist/node && babel ./src/ -d ./dist/node --no-comments",
+    "build": "rm -rf ./dist && babel ./src/ -d ./dist --no-comments",
     "coveralls": "cat ./coverage/lcov.info | ./node_modules/.bin/coveralls",
     "coverage": "nyc report --reporter=text-lcov | coveralls && nyc report --reporter=lcov",
     "lint": "eslint ./src",
