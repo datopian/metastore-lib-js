@@ -5,6 +5,9 @@ metastore-lib-js is a JavaScript library for abstracting metadata storage for da
 ```
 npm install metastore-lib-js
 ```
+
+### Requirements
+Node version 12 and above
 ## Usage
 
 TODO
