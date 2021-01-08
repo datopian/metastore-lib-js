@@ -1,8 +1,6 @@
 import { StorageBackend } from '../storage_backend'
-import { ObjectInfo } from '../types'
 import path from 'path'
 const fs = require('fs')
-import { v4 as uuidv4 } from 'uuid'
 
 /**
  * Abstract filesystem based storage based on Node FileSystem
@@ -19,7 +17,7 @@ class FilesystemStorage extends StorageBackend {
     this._defaultAuthor = defaultAuthor
   }
 
-  create(objectId, metadata = {}, author, message = '') {
+  create(objectId, metadata = {}, author, message = '', description) {
     const packageDir = this._getObjectPath(objectId)
     try {
       fs.mkdirSync(packageDir)
@@ -85,28 +83,8 @@ class FilesystemStorage extends StorageBackend {
     return objectInfo
   }
 
-  _getObjectInfo(objectId, revision, author, message, metadata) {
-    const created = new Date()
-    const description = message
-
-    let objectInfo = new ObjectInfo(
-      objectId,
-      revision,
-      created,
-      author,
-      description,
-      metadata
-    ).getInfo()
-
-    return objectInfo
-  }
-
   _getObjectPath(objectId) {
     return path.join(this._fs.path, objectId)
-  }
-
-  _makeRevisionId() {
-    return uuidv4()
   }
 
   get _name() {
