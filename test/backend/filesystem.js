@@ -1,8 +1,8 @@
 import { expect } from 'chai'
 import { FilesystemStorage } from '../../src/backend/filesystem'
+import { _createTestDatapackage } from '../common_test_functions'
 const fs = require('fs')
 import path from 'path'
-import { object } from 'assert-plus'
 import { Author } from '../../src/types'
 
 before(async () => {
@@ -15,14 +15,6 @@ after(async () => {
   fs.rmdirSync(basePath, { recursive: true })
 })
 
-function createTestDatapackage(name, ...props) {
-  let object = {
-    name: name,
-    resources: [{ path: 'data/myresource.csv' }],
-    ...props,
-  }
-  return object
-}
 
 describe('File System Backend', () => {
   it('Checks if a base directory tmp exists', () => {
@@ -48,7 +40,7 @@ describe('File System Backend', () => {
   it('Creates a new data package file in dir', () => {
     let storage = new FilesystemStorage()
     let name = 'Nigeria-Financial-2020'
-    let metadata = createTestDatapackage(name)
+    let metadata = _createTestDatapackage(name)
     let author = new Author('Rising Odegua', 'rising@datopian.com')
     let message = 'This is my financial budget file'
 
@@ -62,7 +54,7 @@ describe('File System Backend', () => {
   it('Fetchs a data package file in dir', () => {
     let storage = new FilesystemStorage()
     let name = 'India-Financial-2020'
-    let metadata = createTestDatapackage(name)
+    let metadata = _createTestDatapackage(name)
     let author = new Author('Rising Odegua', 'rising@datopian.com')
     let message = 'This is my financial budget file'
 
@@ -83,20 +75,20 @@ describe('File System Backend', () => {
   it('Update an existing data package', () => {
     let storage = new FilesystemStorage()
     let name = 'India-Finance-2020'
-    let metadata = createTestDatapackage(name)
+    let metadata = _createTestDatapackage(name)
     let author = new Author('Rising Odegua', 'rising@datopian.com')
     let message = 'This is my financial budget file'
 
     storage.create(name, metadata, author, message)
 
-    let newMetadata = createTestDatapackage('India-New-2021')
+    let newMetadata = _createTestDatapackage('India-New-2021')
     let newAuthor = new Author('Rising Odegua', 'rising@datopian.com')
     let newMessage = 'This is an updated file'
 
     storage.update(name, newMetadata, newAuthor, false, newMessage)
 
     let datapackage = storage.fetch(name)
-    expect(datapackage.name).to.eq("India-New-2021")
+    expect(datapackage.name).to.eq('India-New-2021')
     expect(datapackage.resources[0].path).to.eq('data/myresource.csv')
     expect(datapackage.revision).to.eq(1)
   })
