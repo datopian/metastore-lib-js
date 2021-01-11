@@ -8,6 +8,7 @@
 import { StorageBackend } from '../storage_backend'
 import dotenv from 'dotenv'
 import { Octokit } from '@octokit/rest'
+import { GraphQLClient, gql } from 'graphql-request'
 
 dotenv.config()
 
@@ -48,166 +49,233 @@ class GitHubStorage extends StorageBackend {
    * @param {*} message
    */
   async create(options = {}) {
-    let { objectId, metadata, message, description, author } = options
+    return new Promise(async (resolve, reject) => {
+      let { objectId, metadata, message, description, author } = options
 
-    if (!objectId) {
-      throw new Error('objectId name cannot be null')
-    }
+      if (!objectId) {
+        throw new Error('objectId name cannot be null')
+      }
 
-    message = message || DEFAULT_COMMIT_MESSAGE
-    description = description || DEFAULT_DESCRIPTION
-    metadata = metadata || {}
+      message = message || DEFAULT_COMMIT_MESSAGE
+      description = description || DEFAULT_DESCRIPTION
+      metadata = metadata || {}
 
-    const authorName = this.defaultAuthorName
-    const authorEmail = this.defaultAuthorEmail
-    author = author || { name: authorName, email: authorEmail }
+      const authorName = this.defaultAuthorName
+      const authorEmail = this.defaultAuthorEmail
+      author = author || { name: authorName, email: authorEmail }
 
-    const org = this.org
-    const name = objectId
-    const revisionId = this._makeRevisionId()
-    metadata.revision = 0
-    metadata.revisionId = revisionId
+      const org = this.org
+      const name = objectId
+      const revisionId = this._makeRevisionId()
+      metadata.revision = 0
+      metadata.revisionId = revisionId
 
-    try {
-      await this.octo.repos.createInOrg({ org, name, description })
+      try {
+        await this.octo.repos.createInOrg({ org, name, description })
 
-      let metadataContent = this._prepareJsonFile(metadata)
+        let metadataContent = this._prepareJsonFile(metadata)
 
-      // let readMeContent = this._prepareTxtFile(
-      //   description || DEFAULT_DESCRIPTION
-      // )
+        await this._commitFileToGithub(
+          objectId,
+          'datapackage.json',
+          message || this.defaultCommitMessage,
+          metadataContent
+        )
 
-      this._commitFileToGithub(
-        objectId,
-        'datapackage.json',
-        message || this.defaultCommitMessage,
-        metadataContent
-      )
-
-      const objectInfo = this._getObjectInfo(
-        objectId,
-        revisionId,
-        author,
-        description,
-        metadata
-      )
-      return objectInfo
-    } catch (error) {
-      throw new Error(error.message)
-    }
+        const objectInfo = this._getObjectInfo(
+          objectId,
+          revisionId,
+          author,
+          description,
+          metadata
+        )
+        resolve(objectInfo)
+      } catch (error) {
+        reject(error.message)
+      }
+    })
   }
 
   async fetch(objectId, branch) {
-    let repoMeta = await this._getMetadataFromRepo(objectId)
-    let metadata = await this._getDataPackageFromRepo(objectId)
-    let lastCommit = await this._getLastCommit(objectId, branch)
+    return new Promise(async (resolve, reject) => {
+      this._getRepo(objectId, branch)
+        .then((repo) => {
+          let author = repo.author
+          let metadata = repo.metadata
+          let description = repo.description
+          let createdAt = repo.createdAt
+          let revisionId = metadata['revisionId'] || ''
 
-    let author = {
-      name: lastCommit.commit.committer.name,
-      email: lastCommit.commit.committer.email,
-    }
-    let description = repoMeta.description
-    let created = repoMeta.created_at
-    let revisionId = metadata['revisionId'] || ''
+          const objectInfo = this._getObjectInfo(
+            objectId,
+            revisionId,
+            author,
+            description,
+            metadata,
+            createdAt
+          )
 
-    const objectInfo = this._getObjectInfo(
-      objectId,
-      revisionId,
-      author,
-      description,
-      metadata,
-      created
-    )
-
-    return objectInfo
+          resolve(objectInfo)
+        })
+        .catch((error) => {
+          reject(error)
+        })
+    })
   }
 
   async update(options = {}) {
-    let { objectId, metadata, message, description, author, branch } = options
-    if (!objectId) {
-      throw new Error('objectId name cannot be null')
-    }
+    return new Promise(async (resolve, reject)=>{
+      let { objectId, metadata, message, description, author, branch } = options
 
-    branch = branch || this.defaultBranch
-    message = message || DEFAULT_COMMIT_MESSAGE
-    description = description || DEFAULT_DESCRIPTION
+      if (!objectId) {
+        throw new Error('objectId name cannot be null')
+      }
 
-    const existingMetadata = (await this.fetch(objectId, branch)).metadata
-    const sha = (await this._getLastCommit(objectId, branch)).sha
+      branch = branch || this.defaultBranch
+      message = message || DEFAULT_COMMIT_MESSAGE
+      description = description || DEFAULT_DESCRIPTION
 
-    metadata = { ...existingMetadata, ...metadata }
+      const repo = await this._getRepo(objectId, branch)
+      
+      const existingMetadata = repo.metadata
+      const sha = repo.sha
+      const newMetadata = { ...existingMetadata, ...metadata }
+      const authorName = this.defaultAuthorName
+      const authorEmail = this.defaultAuthorEmail
+      author = author || { name: authorName, email: authorEmail }
+      const revisionId = this._makeRevisionId()
 
-    const authorName = this.defaultAuthorName
-    const authorEmail = this.defaultAuthorEmail
-    author = author || { name: authorName, email: authorEmail }
-    const revisionId = this._makeRevisionId()
+      newMetadata.revision = metadata["revision"] += 1
 
-    // metadata.revision = metadata.revision += 1
+      let metadataContent = this._prepareJsonFile(newMetadata)
+      //perform update
+      this._commitFileToGithub(
+        objectId,
+        'datapackage.json',
+        message,
+        metadataContent,
+        sha,
+        branch
+      ).then(()=>{
+        const objectInfo = this._getObjectInfo(
+          objectId,
+          revisionId,
+          author,
+          message,
+          metadata
+        )
+        resolve(objectInfo)
+      }).catch((error)=>{
+        reject(error)
+      })
 
-    let metadataContent = this._prepareJsonFile(metadata)
-    //perform update
-    this._commitFileToGithub(
-      objectId,
-      'datapackage.json',
-      message,
-      metadataContent,
-      sha,
-      branch
-    )
-
-    const objectInfo = this._getObjectInfo(
-      objectId,
-      revisionId,
-      author,
-      message,
-      metadata
-    )
-    return objectInfo
+    })
   }
 
-  async _getLastCommit(objectId, branch) {
-    const owner = this.org
-    const repo = objectId
+  
+  _getRepo(objectId, branch) {
+    return new Promise(async (resolve, reject) => {
+      const owner = this.org
+      const token = this.token
+      const expBranch = `"${branch || 'main'}:"`
 
-    let content = await this.octo.repos.getCommit({
-      owner,
-      repo,
-      ref: branch,
+      const endpoint = 'https://api.github.com/graphql'
+
+      const graphQLClient = new GraphQLClient(endpoint, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+
+      const query = gql`
+      query RepoFiles($owner: String!, $name: String!) {
+        repository(owner: $owner, name: $name) {
+          description
+          url
+          createdAt
+          description
+          updatedAt
+          resourcePath
+          name
+          ref(qualifiedName: "${branch}") {
+            target {
+              ... on Commit {
+                history(first: 1) {
+                  edges {
+                    node {
+                      oid
+                      message
+                      author {
+                        name
+                        email
+                        date
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+          object(expression: ${expBranch}) {
+            ... on Tree {
+              entries {
+                name
+                type
+                object {
+                  ... on Blob {
+                    byteSize
+                    oid
+                    text
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    `
+
+      const variables = {
+        owner: owner,
+        name: objectId,
+        branch: branch,
+      }
+
+      try {
+        const repoObj = (await graphQLClient.request(query, variables))
+          .repository
+
+        repoObj.object.entries.forEach((entry) => {
+          if (entry.name == 'datapackage.json') {
+            let metadata = entry.object.text
+            let sha = entry.object.oid
+
+            try {
+              metadata = JSON.parse(metadata)
+            } catch (error) {
+              console.log(error)
+            }
+
+            let repoInfo = {
+              metadata: metadata,
+              description: repoObj.description,
+              createdAt: repoObj.createdAt,
+              updatedAt: repoObj.updatedAt,
+              sha: sha,
+              author: repoObj.ref.target.history.edges[0].node.author,
+            }
+
+            // console.log(repoInfo);
+            resolve(repoInfo)
+          }
+        })
+      } catch (error) {
+        reject(error)
+      }
     })
-    return content.data
-  }
-
-  async _getDataPackageFromRepo(objectId) {
-    const owner = this.org
-    const repo = objectId
-    let path = 'datapackage.json'
-
-    let content = await this.octo.repos.getContent({
-      owner,
-      repo,
-      path,
-    })
-
-    content = JSON.parse(
-      Buffer.from(content.data.content, 'base64').toString()
-    )
-    return content
-  }
-
-  async _getMetadataFromRepo(objectId) {
-    const owner = this.org
-    const repo = objectId
-
-    let content = await this.octo.repos.get({
-      owner,
-      repo,
-    })
-    return content.data
   }
 
   async _commitFileToGithub(objectId, path, message, content, sha, branch) {
     const org = this.org
-    this.octo.repos.createOrUpdateFileContents({
+    await this.octo.repos.createOrUpdateFileContents({
       owner: org,
       repo: objectId,
       path: path,
