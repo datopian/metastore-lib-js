@@ -46,13 +46,13 @@ class StorageBackend {
     return uuidv4()
   }
 
-  _getObjectInfo(objectId, revision, author, description, metadata, created) {
-    created = created || new Date()
+  _getObjectInfo(objectId, revision, author, description, metadata, createdAt) {
+    createdAt = createdAt || new Date()
 
     let objectInfo = new ObjectInfo(
       objectId,
       revision,
-      created,
+      createdAt,
       author,
       description,
       metadata

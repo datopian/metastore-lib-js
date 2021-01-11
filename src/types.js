@@ -6,10 +6,10 @@ class Author {
 }
 
 class ObjectInfo {
-  constructor(objectId, revisionId, created, author, description, metadata) {
+  constructor(objectId, revisionId, createdAt, author, description, metadata) {
     this.objectId = objectId
     this.revisionId = revisionId
-    this.created = created
+    this.createdAt = createdAt
     this.author = author
     this.description = description
     this.metadata = metadata
@@ -19,7 +19,7 @@ class ObjectInfo {
     const objectInfo = {
       objectId: this.objectId,
       revisionId: this.revisionId,
-      created: this.created,
+      createdAt: this.createdAt,
       author: this.author,
       description: this.description,
       metadata: this.metadata,
