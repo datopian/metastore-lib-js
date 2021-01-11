@@ -71,7 +71,7 @@ class GitHubStorage extends StorageBackend {
       metadata.revisionId = revisionId
 
       this.octo.repos
-        .createInOrg({ org, name, description })
+        .createInOrg({ org, name, description, auto_init: true })
         .then(() => {
           let metadataContent = _prepareJsonFile(metadata)
 
