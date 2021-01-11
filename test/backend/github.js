@@ -10,16 +10,13 @@ const octo = new Octokit({
   auth: process.env.PERSONAL_ACESSS_TOKEN,
 })
 
-const toDeleteAfterTest = []
 
 after(async () => {
   console.log('Performing Cleanup...Deleting test repositories')
   try {
-    toDeleteAfterTest.forEach((repo) => {
-      octo.repos.delete({
-        owner: 'gift-data',
-        repo: repo,
-      })
+    octo.repos.delete({
+      owner: 'gift-data',
+      repo: 'France-Financial-2020',
     })
     console.log('Cleanup completed successfully')
   } catch (error) {
@@ -30,39 +27,48 @@ after(async () => {
 describe('Github Backend', function () {
   it('Creates a new repo on github', async function () {
     let storage = new GitHubStorage({
-      token: '9b23c2097de7e95db79acc9af71d9eeefe561f44',
+      token: process.env.PERSONAL_ACESSS_TOKEN,
       org: 'gift-data',
     })
-    let objectId = 'Euro-Financial-2020'
+    let objectId = 'France-Financial-2020'
     let metadata = _createTestDatapackage(objectId)
     let description = 'This is my financial budget file'
 
     let objectInfo = await storage.create({ objectId, metadata, description })
-    toDeleteAfterTest.push(objectId)
     expect(objectInfo.objectId).to.eq(objectId)
     expect(objectInfo.description).to.eq(description)
   })
 
-  it('Fetch an existing object by ID', async function () {
+  it('Fetch an existing object by ID (ref: master)', async function () {
     let storage = new GitHubStorage({
-      token: '9b23c2097de7e95db79acc9af71d9eeefe561f44',
+      token: process.env.PERSONAL_ACESSS_TOKEN,
       org: 'gift-data',
     })
 
-    let file = await storage.fetch('croatia-budget-spending', "master")
+    let file = await storage.fetch('croatia-budget-spending', 'master')
     expect(await file.objectId).to.eq('croatia-budget-spending')
-    expect(await file.created).to.eq('2020-09-01T18:36:49Z')
+    expect(await file.createdAt).to.eq('2020-09-01T18:36:49Z')
+  })
+
+  it('Fetch an existing object by ID (ref: main)', async function () {
+    let storage = new GitHubStorage({
+      token: process.env.PERSONAL_ACESSS_TOKEN,
+      org: 'gift-data',
+    })
+
+    let file = await storage.fetch('France-Financial-2020', 'main')
+    expect(await file.objectId).to.eq('France-Financial-2020')
   })
 
   it('Updates a data package', async function () {
     let storage = new GitHubStorage({
-      token: '9b23c2097de7e95db79acc9af71d9eeefe561f44',
+      token: process.env.PERSONAL_ACESSS_TOKEN,
       org: 'gift-data',
     })
-    let objectId = 'costa-rica-presupuesto-egresos-2017'
+    let objectId = 'France-Financial-2020'
 
-    let metadata = { description: 'A first update' }
-    let branch = 'master'
+    let metadata = { description: 'A first update', revisionId: 'hmmm' }
+    let branch = 'main'
     let file = await storage.update({ objectId, metadata, branch })
 
     expect(file.metadata.description).to.eq('A first update')
