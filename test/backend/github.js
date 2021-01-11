@@ -10,13 +10,14 @@ const octo = new Octokit({
   auth: process.env.PERSONAL_ACESSS_TOKEN,
 })
 
+const OBJECTID = "Italy-Financial-2020"
 
 after(async () => {
   console.log('Performing Cleanup...Deleting test repositories')
   try {
     octo.repos.delete({
       owner: 'gift-data',
-      repo: 'France-Financial-2020',
+      repo: OBJECTID,
     })
     console.log('Cleanup completed successfully')
   } catch (error) {
@@ -24,13 +25,14 @@ after(async () => {
   }
 })
 
+
 describe('Github Backend', function () {
   it('Creates a new repo on github', async function () {
     let storage = new GitHubStorage({
       token: process.env.PERSONAL_ACESSS_TOKEN,
       org: 'gift-data',
     })
-    let objectId = 'France-Financial-2020'
+    let objectId = OBJECTID
     let metadata = _createTestDatapackage(objectId)
     let description = 'This is my financial budget file'
 
@@ -56,8 +58,8 @@ describe('Github Backend', function () {
       org: 'gift-data',
     })
 
-    let file = await storage.fetch('France-Financial-2020', 'main')
-    expect(await file.objectId).to.eq('France-Financial-2020')
+    let file = await storage.fetch(OBJECTID, 'main')
+    expect(await file.objectId).to.eq(OBJECTID)
   })
 
   it('Updates a data package', async function () {
@@ -65,7 +67,7 @@ describe('Github Backend', function () {
       token: process.env.PERSONAL_ACESSS_TOKEN,
       org: 'gift-data',
     })
-    let objectId = 'France-Financial-2020'
+    let objectId = OBJECTID
 
     let metadata = { description: 'A first update', revisionId: 'hmmm' }
     let branch = 'main'

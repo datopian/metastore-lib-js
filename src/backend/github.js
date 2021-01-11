@@ -70,35 +70,39 @@ class GitHubStorage extends StorageBackend {
       metadata.revision = 0
       metadata.revisionId = revisionId
 
-      try {
-        await this.octo.repos.createInOrg({ org, name, description })
+      this.octo.repos
+        .createInOrg({ org, name, description })
+        .then(() => {
+          let metadataContent = _prepareJsonFile(metadata)
 
-        let metadataContent = this._prepareJsonFile(metadata)
-
-        await this._commitFileToGithub(
-          objectId,
-          'datapackage.json',
-          message || this.defaultCommitMessage,
-          metadataContent
-        )
-
-        const objectInfo = this._getObjectInfo(
-          objectId,
-          revisionId,
-          author,
-          description,
-          metadata
-        )
-        resolve(objectInfo)
-      } catch (error) {
-        reject(error.message)
-      }
+          return _commitFileToGithub(
+            objectId,
+            'datapackage.json',
+            message || this.defaultCommitMessage,
+            metadataContent,
+            (org = this.org),
+            (octo = this.octo)
+          )
+        })
+        .then(() => {
+          const objectInfo = this._getObjectInfo(
+            objectId,
+            revisionId,
+            author,
+            description,
+            metadata
+          )
+          resolve(objectInfo)
+        })
+        .catch((error) => {
+          reject(error)
+        })
     })
   }
 
   async fetch(objectId, branch) {
     return new Promise(async (resolve, reject) => {
-      this._getRepo(objectId, branch)
+      _getRepo(objectId, branch, this.org, this.token)
         .then((repo) => {
           let author = repo.author
           let metadata = repo.metadata
@@ -124,8 +128,15 @@ class GitHubStorage extends StorageBackend {
   }
 
   async update(options = {}) {
-    return new Promise(async (resolve, reject)=>{
-      let { objectId, metadata, message, description, author, branch } = options
+    return new Promise(async (resolve, reject) => {
+      let {
+        objectId,
+        metadata,
+        message,
+        description,
+        author,
+        branch,
+      } = options
 
       if (!objectId) {
         throw new Error('objectId name cannot be null')
@@ -135,114 +146,132 @@ class GitHubStorage extends StorageBackend {
       message = message || DEFAULT_COMMIT_MESSAGE
       description = description || DEFAULT_DESCRIPTION
 
-      const repo = await this._getRepo(objectId, branch)
-      
-      const existingMetadata = repo.metadata
-      const sha = repo.sha
-      const newMetadata = { ...existingMetadata, ...metadata }
-      const authorName = this.defaultAuthorName
-      const authorEmail = this.defaultAuthorEmail
-      author = author || { name: authorName, email: authorEmail }
-      const revisionId = this._makeRevisionId()
+      let existingMetadata
+      let sha
+      let newMetadata
+      let revisionId
 
-      newMetadata.revision = metadata["revision"] += 1
+      _getRepo(objectId, branch, this.org, this.token)
+        .then(async (repo) => {
+          console.log("Repo", repo);
+          existingMetadata = repo.metadata
+          sha = repo.sha
+          newMetadata = { ...existingMetadata, ...metadata }
+          const authorName = this.defaultAuthorName
+          const authorEmail = this.defaultAuthorEmail
+          author = author || { name: authorName, email: authorEmail }
+          revisionId = this._makeRevisionId()
+          newMetadata.revision = newMetadata['revision'] += 1
 
-      let metadataContent = this._prepareJsonFile(newMetadata)
-      //perform update
-      this._commitFileToGithub(
-        objectId,
-        'datapackage.json',
-        message,
-        metadataContent,
-        sha,
-        branch
-      ).then(()=>{
-        const objectInfo = this._getObjectInfo(
-          objectId,
-          revisionId,
-          author,
-          message,
-          metadata
-        )
-        resolve(objectInfo)
-      }).catch((error)=>{
-        reject(error)
-      })
+          console.log("Here");
 
+          let metadataContent = _prepareJsonFile(newMetadata)
+
+          console.log("newMetadata", newMetadata);
+          console.log("metaData", metadataContent);
+
+          return _commitFileToGithub(
+            objectId,
+            'datapackage.json',
+            message,
+            metadataContent,
+            sha,
+            branch,
+            this.org,
+            this.octo
+          )
+        })
+        .then(() => {
+          console.log("Saved!");
+          const objectInfo = this._getObjectInfo(
+            objectId,
+            revisionId,
+            author,
+            message,
+            metadata
+          )
+          resolve(objectInfo)
+        })
+        .catch((error) => {
+          reject(error)
+        })
     })
   }
 
-  
-  _getRepo(objectId, branch) {
-    return new Promise(async (resolve, reject) => {
-      const owner = this.org
-      const token = this.token
-      const expBranch = `"${branch || 'main'}:"`
+  get _name() {
+    return 'GitHubStorage'
+  }
+}
 
-      const endpoint = 'https://api.github.com/graphql'
+async function _getRepo(objectId, branch, org, token) {
+  return new Promise(async (resolve, reject) => {
+    const owner = org
+    const expBranch = `"${branch || 'main'}:"`
 
-      const graphQLClient = new GraphQLClient(endpoint, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+    const endpoint = 'https://api.github.com/graphql'
 
-      const query = gql`
-      query RepoFiles($owner: String!, $name: String!) {
-        repository(owner: $owner, name: $name) {
-          description
-          url
-          createdAt
-          description
-          updatedAt
-          resourcePath
-          name
-          ref(qualifiedName: "${branch}") {
-            target {
-              ... on Commit {
-                history(first: 1) {
-                  edges {
-                    node {
-                      oid
-                      message
-                      author {
-                        name
-                        email
-                        date
-                      }
+    const graphQLClient = new GraphQLClient(endpoint, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+
+    const query = gql`
+    query RepoFiles($owner: String!, $name: String!) {
+      repository(owner: $owner, name: $name) {
+        description
+        url
+        createdAt
+        description
+        updatedAt
+        resourcePath
+        name
+        ref(qualifiedName: "${branch}") {
+          target {
+            ... on Commit {
+              history(first: 1) {
+                edges {
+                  node {
+                    oid
+                    message
+                    author {
+                      name
+                      email
+                      date
                     }
                   }
                 }
               }
             }
           }
-          object(expression: ${expBranch}) {
-            ... on Tree {
-              entries {
-                name
-                type
-                object {
-                  ... on Blob {
-                    byteSize
-                    oid
-                    text
-                  }
+        }
+        object(expression: ${expBranch}) {
+          ... on Tree {
+            entries {
+              name
+              type
+              object {
+                ... on Blob {
+                  byteSize
+                  oid
+                  text
                 }
               }
             }
           }
         }
       }
-    `
+    }
+  `
 
-      const variables = {
-        owner: owner,
-        name: objectId,
-        branch: branch,
-      }
+    const variables = {
+      owner: owner,
+      name: objectId,
+      branch: branch,
+    }
 
-      try {
-        const repoObj = (await graphQLClient.request(query, variables))
-          .repository
-
+    graphQLClient
+      .request(query, variables)
+      .then((data) => {
+        const repoObj = data.repository
         repoObj.object.entries.forEach((entry) => {
           if (entry.name == 'datapackage.json') {
             let metadata = entry.object.text
@@ -263,39 +292,51 @@ class GitHubStorage extends StorageBackend {
               author: repoObj.ref.target.history.edges[0].node.author,
             }
 
-            // console.log(repoInfo);
             resolve(repoInfo)
           }
         })
-      } catch (error) {
+      })
+      .catch((error) => {
         reject(error)
-      }
-    })
-  }
+      })
+  })
+}
 
-  async _commitFileToGithub(objectId, path, message, content, sha, branch) {
-    const org = this.org
-    await this.octo.repos.createOrUpdateFileContents({
-      owner: org,
-      repo: objectId,
-      path: path,
-      message: message,
-      content: content,
-      sha,
-      branch,
-    })
-  }
+async function _commitFileToGithub(
+  objectId,
+  path,
+  message,
+  content,
+  sha,
+  branch,
+  org,
+  octo
+) {
+  return new Promise((resolve, reject) => {
+    octo.repos
+      .createOrUpdateFileContents({
+        owner: org,
+        repo: objectId,
+        path: path,
+        message: message,
+        content: content,
+        sha,
+        branch,
+      })
+      .then(() => {
+        resolve()
+      })
+      .catch((error) => {
+        reject(error)
+      })
+  })
+}
 
-  _prepareJsonFile(file) {
-    return Buffer.from(JSON.stringify(file, null, 2)).toString('base64')
-  }
-  _prepareTxtFile(file) {
-    return Buffer.from(file).toString('base64')
-  }
-
-  get _name() {
-    return 'GitHubStorage'
-  }
+function _prepareJsonFile(file) {
+  return Buffer.from(JSON.stringify(file, null, 2)).toString('base64')
+}
+function _prepareTxtFile(file) {
+  return Buffer.from(file).toString('base64')
 }
 
 export { GitHubStorage }
