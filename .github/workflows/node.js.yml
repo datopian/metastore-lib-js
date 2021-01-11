@@ -20,6 +20,9 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node-version }}
+      env:
+        PERSONAL_ACESSS_TOKEN:  ${{ secrets.PERSONAL_ACESSS_TOKEN }}
     - run: yarn
     - run: yarn build
     - run: yarn test
+    
