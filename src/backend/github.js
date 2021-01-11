@@ -153,7 +153,6 @@ class GitHubStorage extends StorageBackend {
 
       _getRepo(objectId, branch, this.org, this.token)
         .then(async (repo) => {
-          console.log("Repo", repo);
           existingMetadata = repo.metadata
           sha = repo.sha
           newMetadata = { ...existingMetadata, ...metadata }
@@ -163,12 +162,7 @@ class GitHubStorage extends StorageBackend {
           revisionId = this._makeRevisionId()
           newMetadata.revision = newMetadata['revision'] += 1
 
-          console.log("Here");
-
           let metadataContent = _prepareJsonFile(newMetadata)
-
-          console.log("newMetadata", newMetadata);
-          console.log("metaData", metadataContent);
 
           return _commitFileToGithub(
             objectId,
@@ -182,7 +176,6 @@ class GitHubStorage extends StorageBackend {
           )
         })
         .then(() => {
-          console.log("Saved!");
           const objectInfo = this._getObjectInfo(
             objectId,
             revisionId,
@@ -280,7 +273,7 @@ async function _getRepo(objectId, branch, org, token) {
             try {
               metadata = JSON.parse(metadata)
             } catch (error) {
-              console.log(error)
+              reject(error)
             }
 
             let repoInfo = {
