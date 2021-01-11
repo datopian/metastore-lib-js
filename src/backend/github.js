@@ -80,8 +80,10 @@ class GitHubStorage extends StorageBackend {
             'datapackage.json',
             message || this.defaultCommitMessage,
             metadataContent,
-            (org = this.org),
-            (octo = this.octo)
+            undefined,
+            undefined,
+            org,
+            this.octo
           )
         })
         .then(() => {
