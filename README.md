@@ -1,5 +1,5 @@
 # metastore-lib-js
-metastore-lib-js is a JavaScript library for abstracting metadata storage for datapackage.json packages
+Library for storing (dataset) metadata, with versioning support and pluggable backends including GitHub. Original written in Python ([See Python version](https://github.com/datopian/metastore-lib)). Originally designed for datasets it can be used for storing any kind of metadata. Versioning (revisioning) support is built-in e.g. you can do: fetch(objectId) => metadata at that revision of the object
 
 ### Installation
 ```
@@ -17,13 +17,14 @@ The Github backend when selected, will save metadata to a specified github organ
 ```javascript
 const metastore = require("metastore-lib-js");
 
-let config = {
+const config = {
   token: "personal_access_token",
   org: "name_of_organisation_on_github",
-  defaultAuthor: { name: "Rising Odegua", email: "rising@datopian.com" }
+  defaultAuthor: { name: "John Doe", email: "john@mail.com" },
+  lfsServerUrl: "https://some-lfs-server"
 };
 
-let storage = metastore.createMetastore("github", config);
+const storage = metastore.createMetastore("github", config);
 ...
 ```
 
@@ -32,6 +33,7 @@ All supported config options are:
 * org: (Required), Name of the organisation you want to save metadata to. 
 * defaultAuthor: (Required), object of name, email pair. Details of  author making changes/commits
 * defaultCommitMessage: (Optional), short github commit message when saving metadata
+* lfsServerUrl: (Optional), The base URL of the Git-LFS server in use. Providing this will make the GitHub backend create Git LFS configuration and pointer files for resources where applicable
 
 After initialization, the storage object can be used to create, fetch and update repositories as shown following sections:
 
@@ -46,8 +48,8 @@ To create a metadata on github, you need to pass some metadata for the repositor
 
 ```javascript
 
-let objectId = "New-Financial-2020"; 
-let metadata = { 
+const objectId = "New-Financial-2020"; 
+const metadata = { 
   name: "Test Financial File",
   resources: [
       { path: "data/myresource.csv",
@@ -56,8 +58,8 @@ let metadata = {
   description: "A financial dataset",
 };
 
-let author = { name: "Rising Odegua", email: "rising@datopian.com" } 
-let description = "This is a financial file"; 
+const author = { name: "Rising Odegua", email: "rising@datopian.com" } 
+const description = "This is a financial file"; 
 
 async function run() {
   let objectInfo = await storage.create({
@@ -83,18 +85,18 @@ To update an existing metadata on github, you need to pass some metadata for the
 
 ```javascript
 
-let objectId = "New-Financial-2020"; 
-let metadata = { 
+const objectId = "New-Financial-2020"; 
+const metadata = { 
   name: "Updated Financial File",
   description: "A financial dataset about Paris",
-};
-let author = { name: "Rising Odegua", email: "rising@datopian.com" } 
+}
+const readMe = `## An updated Readme`
 
 async function run() {
   let objectInfo = await storage.update({
     objectId,
     metadata,
-    author,
+    readMe
   });
   console.log(objectInfo);
 }
@@ -110,7 +112,7 @@ All suported parameters:
 * branch: (Defaults to `main`), can be one of `master` or `main` 
 ```javascript
 async function run() {
-  let objectInfo = await storage.fetch(objectId, "main");
+  const objectInfo = await storage.fetch(objectId);
   console.log(objectInfo);
 }
 ```
