@@ -169,8 +169,8 @@ class GitHubStorage extends StorageBackend {
           const authorEmail = this.defaultAuthorEmail
           author = { name: authorName, email: authorEmail }
           revisionId = this._makeRevisionId()
-          newMetadata.revision = newMetadata['revision']
-            ? (newMetadata['revision'] += 1)
+          newMetadata.revision = "revision" in existingMetadata
+            ? (existingMetadata['revision'] += 1)
             : 0
 
           let filesToUpload
