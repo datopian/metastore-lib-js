@@ -44,7 +44,7 @@ describe('Git LFS Helpers', () => {
       bytes: 1234,
       sha256: 'c3ac9f623869d3c883d6982e6a163bf09b3719d0ebf6af3171ac12c5bb4b3d50',
     }
-    const lfsPointer = `version https://git-lfs.github.com/spec/v1\noid sha256:c3ac9f623869d3c883d6982e6a163bf09b3719d0ebf6af3171ac12c5bb4b3d50\nsize 1234\n')`
+    const lfsPointer = `version https://git-lfs.github.com/spec/v1\noid sha256:c3ac9f623869d3c883d6982e6a163bf09b3719d0ebf6af3171ac12c5bb4b3d50\nsize 1234\n`
     expect(createLfsPointerFile(resource)).to.eq(lfsPointer)
   })
 })
