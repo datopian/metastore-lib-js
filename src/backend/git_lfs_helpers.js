@@ -1,8 +1,8 @@
-/**Git LFS Helpers used by all Git based backends that support Git-LFS
- **/
+/**
+ * Git LFS Helpers used by all Git based backends that support Git-LFS
+ * **/
 
 import { isHexStr } from '../utils'
-
 /**
   * Tell if a resource represents a POSIX-path (i.e. local file) resource
 
@@ -102,7 +102,7 @@ function createLfsPointerFile(resource) {
       'Resource sha256 value does not seem to be a valid sha256 hex string'
     )
   }
-  return `version https://git-lfs.github.com/spec/v1\noid sha256:${resource['sha256']}\nsize ${resource['bytes']}\n')`
+  return `version https://git-lfs.github.com/spec/v1\noid sha256:${resource['sha256']}\nsize ${resource['bytes']}\n`
 }
 
 function isString(obj) {
