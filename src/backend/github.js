@@ -74,7 +74,7 @@ class GitHubStorage extends StorageBackend {
 
       createRepo(octo, org, repoName, description)
         .then(() => {
-          let filesToUpload = { metadata: metadata, readMe: readMe }
+          const filesToUpload = { metadata: metadata, readMe: readMe }
           return uploadToRepo(
             octo,
             filesToUpload,
@@ -114,11 +114,8 @@ class GitHubStorage extends StorageBackend {
     return new Promise(async (resolve, reject) => {
       getRepo(objectId, branch, this.org, this.token)
         .then((repo) => {
-          let author = repo.author
-          let metadata = repo.metadata
-          let description = repo.description
-          let createdAt = repo.createdAt
-          let revisionId = metadata['revisionId'] || ''
+          const { author, metadata, description, createdAt } = repo
+          const revisionId = metadata['revisionId'] || ''
 
           const objectInfo = this._getObjectInfo(
             objectId,
@@ -169,9 +166,10 @@ class GitHubStorage extends StorageBackend {
           const authorEmail = this.defaultAuthorEmail
           author = { name: authorName, email: authorEmail }
           revisionId = this._makeRevisionId()
-          newMetadata.revision = "revision" in existingMetadata
-            ? (existingMetadata['revision'] += 1)
-            : 0
+          newMetadata.revision =
+            'revision' in existingMetadata
+              ? (existingMetadata['revision'] += 1)
+              : 0
 
           let filesToUpload
           if (readMe) {
