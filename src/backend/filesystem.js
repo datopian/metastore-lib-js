@@ -1,4 +1,4 @@
-import { StorageBackend } from '../storage_backend'
+import { StorageBackend } from '../storageBackend'
 import path from 'path'
 const fs = require('fs')
 
