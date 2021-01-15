@@ -5,7 +5,7 @@ import {
   createGitAttributesFile,
   createLfsConfigFile,
   createLfsPointerFile,
-} from '../../src/backend/git_lfs_helpers'
+} from '../../src/backend/gitLfsHelpers'
 
 describe('Git LFS Helpers', () => {
   it('isPosixPathResource works correctly ', () => {

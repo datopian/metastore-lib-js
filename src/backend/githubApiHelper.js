@@ -2,9 +2,9 @@ import {
   createLfsPointerFile,
   createGitAttributesFile,
   createLfsConfigFile,
-} from './git_lfs_helpers'
+} from './gitLfsHelpers'
 
-import { hasLfsAttributes, isPosixPathResource } from './git_lfs_helpers'
+import { hasLfsAttributes, isPosixPathResource } from './gitLfsHelpers'
 import { GraphQLClient, gql } from 'graphql-request'
 
 /**

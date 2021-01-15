@@ -1,6 +1,6 @@
 import { expect } from 'chai'
-import { _createTestDatapackage, _repoExists } from '../common_test_functions'
-import { getFileBlobsAndPaths } from '../../src/backend/github_api_helper'
+import { _createTestDatapackage, _repoExists } from '../commonTestFunctions'
+import { getFileBlobsAndPaths } from '../../src/backend/githubApiHelper'
 
 const lfs_test_server = 'http://some-local-server'
 const sampleMetadata = {

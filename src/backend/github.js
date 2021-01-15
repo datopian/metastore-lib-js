@@ -5,10 +5,10 @@
  * not support other Git hosting services.
  */
 
-import { StorageBackend } from '../storage_backend'
+import { StorageBackend } from '../storageBackend'
 import dotenv from 'dotenv'
 import { Octokit } from '@octokit/rest'
-import { createRepo, uploadToRepo, getRepo } from './github_api_helper'
+import { createRepo, uploadToRepo, getRepo } from './githubApiHelper'
 
 dotenv.config()
 

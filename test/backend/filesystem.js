@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import { FilesystemStorage } from '../../src/backend/filesystem'
-import { _createTestDatapackage } from '../common_test_functions'
+import { _createTestDatapackage } from '../commonTestFunctions'
 const fs = require('fs')
 import path from 'path'
 import { Author } from '../../src/types'
