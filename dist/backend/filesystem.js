@@ -5,7 +5,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.FilesystemStorage = void 0;
 
-var _storage_backend = require("../storage_backend");
+var _storageBackend = require("../storageBackend");
 
 var _path = _interopRequireDefault(require("path"));
 
@@ -13,7 +13,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 const fs = require('fs');
 
-class FilesystemStorage extends _storage_backend.StorageBackend {
+class FilesystemStorage extends _storageBackend.StorageBackend {
   constructor(uri = '', defaultAuthor) {
     super();
     this.basePath = _path.default.join(process.cwd(), 'tmp', uri);

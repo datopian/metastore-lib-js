@@ -5,13 +5,13 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.GitHubStorage = void 0;
 
-var _storage_backend = require("../storage_backend");
+var _storageBackend = require("../storageBackend");
 
 var _dotenv = _interopRequireDefault(require("dotenv"));
 
 var _rest = require("@octokit/rest");
 
-var _graphqlRequest = require("graphql-request");
+var _githubApiHelper = require("./githubApiHelper");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -20,8 +20,11 @@ _dotenv.default.config();
 const DEFAULT_DESCRIPTION = `### This is a datapackage repository created using metastore-lib-js ==> https://github.com/datopian/metastore-lib-js`;
 const DEFAULT_BRANCH = 'main';
 const DEFAULT_COMMIT_MESSAGE = 'Add Datapackage';
+const DEFAULT_README = `# ¯\\_(ツ)_/¯\n'
+                      'This is a datapackage repository created by '
+                      '[\`metastore-lib-js\`](https://github.com/datopian/metastore-lib-js)'`;
 
-class GitHubStorage extends _storage_backend.StorageBackend {
+class GitHubStorage extends _storageBackend.StorageBackend {
   constructor(config) {
     super();
     const baseConfig = {
@@ -32,18 +35,18 @@ class GitHubStorage extends _storage_backend.StorageBackend {
         email: ''
       },
       defaultBranch: DEFAULT_BRANCH,
-      defaultCommitMessage: DEFAULT_COMMIT_MESSAGE,
+      defaultReadMe: DEFAULT_README,
       private: false,
+      lfsServerUrl: undefined,
       ...config
     };
     this.token = process.env.PERSONAL_ACESSS_TOKEN || baseConfig.token;
     this.org = baseConfig.org;
     this.defaultAuthorName = baseConfig.defaultAuthor.name;
     this.defaultAuthorEmail = baseConfig.defaultAuthor.email;
-    this.defaultBranch = baseConfig.defaultBranch;
-    this.defaultCommitMessage = baseConfig.defaultCommitMessage;
     this.private = baseConfig.private;
-    this.repoNames = [];
+    this.defaultBranch = baseConfig.branch;
+    this.lfsServerUrl = baseConfig.lfsServerUrl;
     this.octo = new _rest.Octokit({
       auth: this.token
     });
@@ -56,7 +59,7 @@ class GitHubStorage extends _storage_backend.StorageBackend {
         metadata,
         message,
         description,
-        author
+        readMe
       } = options;
 
       if (!objectId) {
@@ -65,30 +68,33 @@ class GitHubStorage extends _storage_backend.StorageBackend {
 
       message = message || DEFAULT_COMMIT_MESSAGE;
       description = description || DEFAULT_DESCRIPTION;
+      readMe = readMe || DEFAULT_README;
       metadata = metadata || {};
-      const authorName = this.defaultAuthorName;
-      const authorEmail = this.defaultAuthorEmail;
-      author = author || {
-        name: authorName,
-        email: authorEmail
-      };
-      const org = this.org;
-      const name = objectId;
+
+      const {
+        org,
+        repoName
+      } = this._parseId(objectId);
 
       const revisionId = this._makeRevisionId();
 
+      const octo = this.octo;
       metadata.revision = 0;
       metadata.revisionId = revisionId;
-      this.octo.repos.createInOrg({
-        org,
-        name,
-        description,
-        auto_init: true
+      (0, _githubApiHelper.createRepo)(octo, org, repoName, description).then(() => {
+        const filesToUpload = {
+          metadata: metadata,
+          readMe: readMe
+        };
+        return (0, _githubApiHelper.uploadToRepo)(octo, filesToUpload, org, repoName, this.defaultBranch, this.lfsServerUrl, message);
       }).then(() => {
-        let metadataContent = _prepareJsonFile(metadata);
+        const authorName = this.defaultAuthorName;
+        const authorEmail = this.defaultAuthorEmail;
+        const author = {
+          name: authorName,
+          email: authorEmail
+        };
 
-        return _commitFileToGithub(objectId, 'datapackage.json', message || this.defaultCommitMessage, metadataContent, undefined, undefined, org, this.octo);
-      }).then(() => {
         const objectInfo = this._getObjectInfo(objectId, revisionId, author, description, metadata);
 
         resolve(objectInfo);
@@ -100,12 +106,14 @@ class GitHubStorage extends _storage_backend.StorageBackend {
 
   async fetch(objectId, branch) {
     return new Promise(async (resolve, reject) => {
-      _getRepo(objectId, branch, this.org, this.token).then(repo => {
-        let author = repo.author;
-        let metadata = repo.metadata;
-        let description = repo.description;
-        let createdAt = repo.createdAt;
-        let revisionId = metadata['revisionId'] || '';
+      (0, _githubApiHelper.getRepo)(objectId, branch, this.org, this.token).then(repo => {
+        const {
+          author,
+          metadata,
+          description,
+          createdAt
+        } = repo;
+        const revisionId = metadata['revisionId'] || '';
 
         const objectInfo = this._getObjectInfo(objectId, revisionId, author, description, metadata, createdAt);
 
@@ -122,41 +130,51 @@ class GitHubStorage extends _storage_backend.StorageBackend {
         objectId,
         metadata,
         message,
-        description,
-        author,
-        branch
+        branch,
+        readMe
       } = options;
 
       if (!objectId) {
         throw new Error('objectId name cannot be null');
       }
 
-      branch = branch || this.defaultBranch;
-      message = message || DEFAULT_COMMIT_MESSAGE;
-      description = description || DEFAULT_DESCRIPTION;
+      const {
+        org,
+        repoName
+      } = this._parseId(objectId);
+
       let existingMetadata;
-      let sha;
       let newMetadata;
       let revisionId;
-
-      _getRepo(objectId, branch, this.org, this.token).then(async repo => {
+      let author;
+      message = message || DEFAULT_COMMIT_MESSAGE;
+      (0, _githubApiHelper.getRepo)(objectId, branch, org, this.token).then(async repo => {
         existingMetadata = repo.metadata;
-        sha = repo.sha;
         newMetadata = { ...existingMetadata,
           ...metadata
         };
         const authorName = this.defaultAuthorName;
         const authorEmail = this.defaultAuthorEmail;
-        author = author || {
+        author = {
           name: authorName,
           email: authorEmail
         };
         revisionId = this._makeRevisionId();
-        newMetadata.revision = newMetadata['revision'] += 1;
+        newMetadata.revision = 'revision' in existingMetadata ? existingMetadata['revision'] += 1 : 0;
+        let filesToUpload;
 
-        let metadataContent = _prepareJsonFile(newMetadata);
+        if (readMe) {
+          filesToUpload = {
+            metadata: newMetadata,
+            readMe
+          };
+        } else {
+          filesToUpload = {
+            metadata: newMetadata
+          };
+        }
 
-        return _commitFileToGithub(objectId, 'datapackage.json', message, metadataContent, sha, branch, this.org, this.octo);
+        return (0, _githubApiHelper.uploadToRepo)(this.octo, filesToUpload, org, repoName, this.defaultBranch, this.lfsServerUrl, message);
       }).then(() => {
         const objectInfo = this._getObjectInfo(objectId, revisionId, author, message, metadata);
 
@@ -167,6 +185,19 @@ class GitHubStorage extends _storage_backend.StorageBackend {
     });
   }
 
+  _parseId(objectId) {
+    if (objectId.includes('/')) {
+      return objectId.split('/', 1);
+    } else if (this.org) {
+      return {
+        org: this.org,
+        repoName: objectId
+      };
+    } else {
+      throw new Error(`Invalid package ID for the GitHub backend: ${objectId}`);
+    }
+  }
+
   get _name() {
     return 'GitHubStorage';
   }
@@ -174,121 +205,3 @@ class GitHubStorage extends _storage_backend.StorageBackend {
 }
 
 exports.GitHubStorage = GitHubStorage;
-
-async function _getRepo(objectId, branch, org, token) {
-  return new Promise(async (resolve, reject) => {
-    const owner = org;
-    const expBranch = `"${branch || 'main'}:"`;
-    const endpoint = 'https://api.github.com/graphql';
-    const graphQLClient = new _graphqlRequest.GraphQLClient(endpoint, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    });
-    const query = (0, _graphqlRequest.gql)`
-    query RepoFiles($owner: String!, $name: String!) {
-      repository(owner: $owner, name: $name) {
-        description
-        url
-        createdAt
-        description
-        updatedAt
-        resourcePath
-        name
-        ref(qualifiedName: "${branch}") {
-          target {
-            ... on Commit {
-              history(first: 1) {
-                edges {
-                  node {
-                    oid
-                    message
-                    author {
-                      name
-                      email
-                      date
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-        object(expression: ${expBranch}) {
-          ... on Tree {
-            entries {
-              name
-              type
-              object {
-                ... on Blob {
-                  byteSize
-                  oid
-                  text
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  `;
-    const variables = {
-      owner: owner,
-      name: objectId,
-      branch: branch
-    };
-    graphQLClient.request(query, variables).then(data => {
-      const repoObj = data.repository;
-      repoObj.object.entries.forEach(entry => {
-        if (entry.name == 'datapackage.json') {
-          let metadata = entry.object.text;
-          let sha = entry.object.oid;
-
-          try {
-            metadata = JSON.parse(metadata);
-          } catch (error) {
-            reject(error);
-          }
-
-          let repoInfo = {
-            metadata: metadata,
-            description: repoObj.description,
-            createdAt: repoObj.createdAt,
-            updatedAt: repoObj.updatedAt,
-            sha: sha,
-            author: repoObj.ref.target.history.edges[0].node.author
-          };
-          resolve(repoInfo);
-        }
-      });
-    }).catch(error => {
-      reject(error);
-    });
-  });
-}
-
-async function _commitFileToGithub(objectId, path, message, content, sha, branch, org, octo) {
-  return new Promise((resolve, reject) => {
-    octo.repos.createOrUpdateFileContents({
-      owner: org,
-      repo: objectId,
-      path: path,
-      message: message,
-      content: content,
-      sha,
-      branch
-    }).then(() => {
-      resolve();
-    }).catch(error => {
-      reject(error);
-    });
-  });
-}
-
-function _prepareJsonFile(file) {
-  return Buffer.from(JSON.stringify(file, null, 2)).toString('base64');
-}
-
-function _prepareTxtFile(file) {
-  return Buffer.from(file).toString('base64');
-}
