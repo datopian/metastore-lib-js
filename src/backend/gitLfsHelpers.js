@@ -24,11 +24,11 @@ import { isHexStr } from '../utils'
   * @param {*} resource 
   */
 function isPosixPathResource(resource) {
-  if (!('path' in resource)) {
+  if (!(Object.keys(resource).includes("path"))) {
     return false
   }
 
-  if (!isString(resource['path'])) {
+  if (!(isString(resource['path']))) {
     return false
   }
 
@@ -42,13 +42,13 @@ function isPosixPathResource(resource) {
 /**
  * Tell if a resource has the attributes required for an LFS-stored resource
 
-    >>> has_lfs_attributes({"path": "data.csv", "bytes": 1234, "sha256": "someshavalue"})
+    >>> has_lfs_attributes({"path": "data.csv", "bytes": 1234, "hash": "someshavalue"})
     True
 
-    >>> has_lfs_attributes({"path": "data.csv", "size": 1234, "sha256": "someshavalue"})
+    >>> has_lfs_attributes({"path": "data.csv", "size": 1234, "hash": "someshavalue"})
     False
 
-    >>> has_lfs_attributes({"path": "data.csv", "sha256": "someshavalue"})
+    >>> has_lfs_attributes({"path": "data.csv", "hash": "someshavalue"})
     False
 
     >>> has_lfs_attributes({"path": "data.csv", "bytes": 1234})
@@ -59,7 +59,7 @@ function isPosixPathResource(resource) {
  * @param {*} resource 
  */
 function hasLfsAttributes(resource) {
-  if (!isString(resource['sha256'])) {
+  if (!isString(resource['hash'])) {
     return false
   }
 
@@ -97,12 +97,12 @@ function createLfsConfigFile(lfsServerUrl, remote = 'origin') {
  * @param {*} resource
  */
 function createLfsPointerFile(resource) {
-  if (!isHexStr(resource['sha256'], 64)) {
+  if (!isHexStr(resource['hash'], 64)) {
     throw new Error(
       'Resource sha256 value does not seem to be a valid sha256 hex string'
     )
   }
-  return `version https://git-lfs.github.com/spec/v1\noid sha256:${resource['sha256']}\nsize ${resource['bytes']}\n`
+  return `version https://git-lfs.github.com/spec/v1\noid sha256:${resource['hash']}\nsize ${resource['bytes']}\n`
 }
 
 function isString(obj) {
