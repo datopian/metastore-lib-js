@@ -107,7 +107,7 @@ class GitHubStorage extends _storageBackend.StorageBackend {
   async fetch(objectId, branch) {
     return new Promise(async (resolve, reject) => {
       (0, _githubApiHelper.getRepo)(objectId, branch, this.org, this.token).then(repo => {
-        const {
+        let {
           author,
           metadata,
           description,
@@ -138,7 +138,7 @@ class GitHubStorage extends _storageBackend.StorageBackend {
         throw new Error('objectId name cannot be null');
       }
 
-      const {
+      let {
         org,
         repoName
       } = this._parseId(objectId);

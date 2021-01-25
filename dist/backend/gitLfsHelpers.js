@@ -12,7 +12,7 @@ exports.createLfsPointerFile = createLfsPointerFile;
 var _utils = require("../utils");
 
 function isPosixPathResource(resource) {
-  if (!('path' in resource)) {
+  if (!Object.keys(resource).includes("path")) {
     return false;
   }
 
@@ -31,7 +31,7 @@ function isPosixPathResource(resource) {
 }
 
 function hasLfsAttributes(resource) {
-  if (!isString(resource['sha256'])) {
+  if (!isString(resource['hash'])) {
     return false;
   }
 
@@ -56,11 +56,11 @@ function createLfsConfigFile(lfsServerUrl, remote = 'origin') {
 }
 
 function createLfsPointerFile(resource) {
-  if (!(0, _utils.isHexStr)(resource['sha256'], 64)) {
+  if (!(0, _utils.isHexStr)(resource['hash'], 64)) {
     throw new Error('Resource sha256 value does not seem to be a valid sha256 hex string');
   }
 
-  return `version https://git-lfs.github.com/spec/v1\noid sha256:${resource['sha256']}\nsize ${resource['bytes']}\n`;
+  return `version https://git-lfs.github.com/spec/v1\noid sha256:${resource['hash']}\nsize ${resource['bytes']}\n`;
 }
 
 function isString(obj) {
