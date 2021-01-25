@@ -114,7 +114,7 @@ class GitHubStorage extends StorageBackend {
     return new Promise(async (resolve, reject) => {
       getRepo(objectId, branch, this.org, this.token)
         .then((repo) => {
-          const { author, metadata, description, createdAt } = repo
+          let { author, metadata, description, createdAt } = repo
           const revisionId = metadata['revisionId'] || ''
 
           const objectInfo = this._getObjectInfo(
@@ -150,7 +150,7 @@ class GitHubStorage extends StorageBackend {
       if (!objectId) {
         throw new Error('objectId name cannot be null')
       }
-      const { org, repoName } = this._parseId(objectId)
+      let { org, repoName } = this._parseId(objectId)
       let existingMetadata
       let newMetadata
       let revisionId
