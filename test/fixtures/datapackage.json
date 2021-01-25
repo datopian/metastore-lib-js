@@ -1,0 +1,238 @@
+{
+    "@context": "http://schemas.frictionlessdata.io/fiscal-data-package.jsonld",
+    "author": "",
+    "description": "",
+    "model": {
+        "dimensions": {
+            "activity": {
+                "dimensionType": "activity",
+                "primaryKey": [
+                    "residual_sugar"
+                ],
+                "attributes": {
+                    "type": {
+                        "source": "type",
+                        "title": "type"
+                    },
+                    "fixed_acidity": {
+                        "source": "fixed acidity",
+                        "title": "fixed acidity"
+                    },
+                    "volatile_acidity": {
+                        "source": "volatile acidity",
+                        "title": "volatile acidity"
+                    },
+                    "citric_acid": {
+                        "source": "citric acid",
+                        "title": "citric acid"
+                    },
+                    "residual_sugar": {
+                        "source": "residual sugar",
+                        "title": "residual sugar"
+                    },
+                    "chlorides": {
+                        "source": "chlorides",
+                        "title": "chlorides"
+                    },
+                    "free_sulfur_dioxide": {
+                        "source": "free sulfur dioxide",
+                        "title": "free sulfur dioxide"
+                    },
+                    "total_sulfur_dioxide": {
+                        "source": "total sulfur dioxide",
+                        "title": "d"
+                    },
+                    "density": {
+                        "source": "density",
+                        "title": "density"
+                    },
+                    "quality": {
+                        "source": "quality",
+                        "title": "quality"
+                    }
+                }
+            },
+            "administrative-classification": {
+                "dimensionType": "classification",
+                "primaryKey": [
+                    "pH",
+                    "sulphates",
+                    "alcohol"
+                ],
+                "attributes": {
+                    "pH": {
+                        "source": "pH",
+                        "title": "pH"
+                    },
+                    "sulphates": {
+                        "source": "sulphates",
+                        "title": "sulphates"
+                    },
+                    "alcohol": {
+                        "source": "alcohol",
+                        "title": "alcohol"
+                    }
+                },
+                "classificationType": "administrative"
+            }
+        },
+        "measures": {}
+    },
+    "name": "winequalityN.csv",
+    "profile": "data-package",
+    "title": "winequalityN.csv",
+    "resources": [
+        {
+            "bytes": 390376,
+            "hash": "cb01f91c70de066f85d4cffac3bb163e4719523861cd79ba8825b722cf98b48c",
+            "format": "csv",
+            "schema": {
+                "fields": {
+                    "type": {
+                        "title": "type",
+                        "name": "type",
+                        "slug": "type",
+                        "type": "string",
+                        "format": "default",
+                        "columnType": "activity:generic:contract:label",
+                        "conceptType": "activity",
+                        "options": []
+                    },
+                    "fixed acidity": {
+                        "title": "fixed acidity",
+                        "name": "fixed acidity",
+                        "slug": "fixed_acidity",
+                        "type": "string",
+                        "format": "default",
+                        "columnType": "activity:generic:contract:label",
+                        "conceptType": "activity",
+                        "options": []
+                    },
+                    "volatile acidity": {
+                        "title": "volatile acidity",
+                        "name": "volatile acidity",
+                        "slug": "volatile_acidity",
+                        "type": "string",
+                        "format": "default",
+                        "columnType": "activity:generic:contract:label",
+                        "conceptType": "activity",
+                        "options": []
+                    },
+                    "citric acid": {
+                        "title": "citric acid",
+                        "name": "citric acid",
+                        "slug": "citric_acid",
+                        "type": "string",
+                        "format": "default",
+                        "columnType": "activity:generic:contract:label",
+                        "conceptType": "activity",
+                        "options": []
+                    },
+                    "residual sugar": {
+                        "title": "residual sugar",
+                        "name": "residual sugar",
+                        "slug": "residual_sugar",
+                        "type": "string",
+                        "format": "default",
+                        "columnType": "activity:generic:program:code",
+                        "conceptType": "activity",
+                        "options": []
+                    },
+                    "chlorides": {
+                        "title": "chlorides",
+                        "name": "chlorides",
+                        "slug": "chlorides",
+                        "type": "string",
+                        "format": "default",
+                        "columnType": "activity:generic:contract:label",
+                        "conceptType": "activity",
+                        "options": []
+                    },
+                    "free sulfur dioxide": {
+                        "title": "free sulfur dioxide",
+                        "name": "free sulfur dioxide",
+                        "slug": "free_sulfur_dioxide",
+                        "type": "string",
+                        "format": "default",
+                        "columnType": "activity:generic:contract:label",
+                        "conceptType": "activity",
+                        "options": []
+                    },
+                    "total sulfur dioxide": {
+                        "title": "d",
+                        "name": "total sulfur dioxide",
+                        "slug": "total_sulfur_dioxide",
+                        "type": "string",
+                        "format": "default",
+                        "columnType": "activity:generic:contract:label",
+                        "conceptType": "activity",
+                        "options": []
+                    },
+                    "density": {
+                        "title": "density",
+                        "name": "density",
+                        "slug": "density",
+                        "type": "string",
+                        "format": "default",
+                        "columnType": "activity:generic:contract:label",
+                        "conceptType": "activity",
+                        "options": []
+                    },
+                    "pH": {
+                        "title": "pH",
+                        "name": "pH",
+                        "slug": "pH",
+                        "type": "string",
+                        "format": "default",
+                        "columnType": "administrative-classification:generic:code",
+                        "conceptType": "administrative-classification",
+                        "options": []
+                    },
+                    "sulphates": {
+                        "title": "sulphates",
+                        "name": "sulphates",
+                        "slug": "sulphates",
+                        "type": "string",
+                        "format": "default",
+                        "columnType": "administrative-classification:generic:level2:code",
+                        "conceptType": "administrative-classification",
+                        "options": []
+                    },
+                    "alcohol": {
+                        "title": "alcohol",
+                        "name": "alcohol",
+                        "slug": "alcohol",
+                        "type": "string",
+                        "format": "default",
+                        "columnType": "administrative-classification:generic:code",
+                        "conceptType": "administrative-classification",
+                        "options": []
+                    },
+                    "quality": {
+                        "title": "quality",
+                        "name": "quality",
+                        "slug": "quality",
+                        "type": "string",
+                        "format": "default",
+                        "columnType": "activity:generic:contract:label",
+                        "conceptType": "activity",
+                        "options": []
+                    }
+                },
+                "primaryKey": [
+                    "residual sugar",
+                    "pH",
+                    "sulphates",
+                    "alcohol"
+                ]
+            },
+            "encoding": "utf-8",
+            "mediatype": "text/csv",
+            "name": "winequalityN.csv",
+            "dialect": {
+                "delimiter": ",",
+                "quoteChar": "\""
+            }
+        }
+    ]
+}

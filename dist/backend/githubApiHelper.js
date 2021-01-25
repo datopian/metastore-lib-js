@@ -3,6 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.createLfsFiles = createLfsFiles;
 exports.createRepo = createRepo;
 exports.uploadToRepo = uploadToRepo;
 exports.getRepo = getRepo;
@@ -37,10 +38,8 @@ function createLfsFiles(metadata, lfsServerUrl) {
   }
 
   let fileResources = metadata['resources'] || [];
-  fileResources = fileResources.map(resource => {
-    if ((0, _gitLfsHelpers.isPosixPathResource)(resource) && (0, _gitLfsHelpers.hasLfsAttributes)(resource)) {
-      return resource;
-    }
+  fileResources = fileResources.filter(resource => {
+    return (0, _gitLfsHelpers.isPosixPathResource)(resource) && (0, _gitLfsHelpers.hasLfsAttributes)(resource);
   });
 
   if (fileResources.length == 0) {

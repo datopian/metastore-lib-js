@@ -33,17 +33,15 @@ async function createRepo(octo, org, name, description) {
  * @param {Object} metadata:  Metadata containing a resource object
  * @param {String} lfsServerUrl LFS server URL for constructing files
  */
-function createLfsFiles(metadata, lfsServerUrl) {
+export function createLfsFiles(metadata, lfsServerUrl) {
   if (!lfsServerUrl) {
     return []
   }
 
   let fileResources = metadata['resources'] || []
 
-  fileResources = fileResources.map((resource) => {
-    if (isPosixPathResource(resource) && hasLfsAttributes(resource)) {
-      return resource
-    }
+  fileResources = fileResources.filter((resource) => {
+    return isPosixPathResource(resource) && hasLfsAttributes(resource)
   })
 
   if (fileResources.length == 0) {
@@ -86,7 +84,6 @@ function createLfsFiles(metadata, lfsServerUrl) {
 function getFileBlobsAndPaths(files, lfsServerUrl) {
   let fileBlobsAndPaths = { filesAsUTF8: [], pathsForUTF8Files: [] }
   let lfsFiles = createLfsFiles(files['metadata'], lfsServerUrl)
-
   if (Array.isArray(lfsFiles) && lfsFiles.length == 0) {
     //no LFS files
     const metadata = getFileAsUTF8(files['metadata'], 'json')
@@ -130,7 +127,7 @@ function getFileBlobsAndPaths(files, lfsServerUrl) {
 }
 
 /**
- * Upload a a list of files to specified Github repo.
+ * Upload a list of files to specified Github repo.
  * @param {Octokit} octo Authenticated Octokit object
  * @param {Object} files An object with metadata and readMe properties: {metadata: {...}, readMe: ""}
  * @param {String} org Name of organisation or repo owner on Github
