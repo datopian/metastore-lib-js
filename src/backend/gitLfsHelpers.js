@@ -97,11 +97,11 @@ function createLfsConfigFile(lfsServerUrl, remote = 'origin') {
  * @param {*} resource
  */
 function createLfsPointerFile(resource) {
-  if (!isHexStr(resource['hash'], 64)) {
-    throw new Error(
-      'Resource sha256 value does not seem to be a valid sha256 hex string'
-    )
-  }
+  // if (!isHexStr(resource['hash'], 64)) {
+  //   throw new Error(
+  //     'Resource sha256 value does not seem to be a valid sha256 hex string'
+  //   )
+  // }
   return `version https://git-lfs.github.com/spec/v1\noid sha256:${resource['hash']}\nsize ${resource['bytes']}\n`
 }
 
