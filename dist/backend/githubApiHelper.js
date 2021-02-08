@@ -281,7 +281,6 @@ async function getRepo(objectId, branch, org, token) {
       repoObj.object.entries.forEach(entry => {
         if (entry.name == 'datapackage.json') {
           let metadata = entry.object.text;
-          let sha = entry.object.oid;
 
           try {
             metadata = JSON.parse(metadata);
@@ -294,7 +293,15 @@ async function getRepo(objectId, branch, org, token) {
             description: repoObj.description,
             createdAt: repoObj.createdAt,
             updatedAt: repoObj.updatedAt,
-            sha: sha,
+            author: repoObj.ref.target.history.edges[0].node.author
+          };
+          resolve(repoInfo);
+        } else {
+          let repoInfo = {
+            metadata: {},
+            description: repoObj.description,
+            createdAt: repoObj.createdAt,
+            updatedAt: repoObj.updatedAt,
             author: repoObj.ref.target.history.edges[0].node.author
           };
           resolve(repoInfo);
