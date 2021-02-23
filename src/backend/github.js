@@ -236,11 +236,11 @@ class GitHubStorage extends StorageBackend {
    */
   async delete(options = { isResource: false }) {
     return new Promise(async (resolve, reject) => {
-      let { objectId, path, branch, isResource } = options
+      const { objectId, path, branch, isResource } = options
       if (!objectId) {
         throw new Error('objectId name cannot be null')
       }
-      let { org, repoName } = this._parseId(objectId)
+      const { org, repoName } = this._parseId(objectId)
 
       getRepo(objectId, branch, org, this.token)
         .then(async (repo) => {
