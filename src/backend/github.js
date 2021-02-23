@@ -120,7 +120,6 @@ class GitHubStorage extends StorageBackend {
     return new Promise(async (resolve, reject) => {
       getRepo(objectId, branch, this.org, this.token)
         .then((repo) => {
-          console.log('repos', repo)
           let { author, metadata, description, createdAt } = repo
           const revisionId = metadata['revisionId'] || ''
 
