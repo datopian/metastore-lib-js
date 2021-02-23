@@ -198,6 +198,41 @@ class GitHubStorage extends _storageBackend.StorageBackend {
     }
   }
 
+  async delete(options = {
+    isResource: false
+  }) {
+    return new Promise(async (resolve, reject) => {
+      let {
+        objectId,
+        path,
+        branch,
+        isResource
+      } = options;
+
+      if (!objectId) {
+        throw new Error('objectId name cannot be null');
+      }
+
+      let {
+        org,
+        repoName
+      } = this._parseId(objectId);
+
+      (0, _githubApiHelper.getRepo)(objectId, branch, org, this.token).then(async repo => {
+        if (isResource) {
+          return (0, _githubApiHelper.deleteFile)(repoName, org, path, branch, this.octo, repo);
+        } else {
+          return (0, _githubApiHelper.deleteRepo)(repoName, org, this.octo);
+        }
+      }).then(status => {
+        resolve(status);
+      }).catch(err => {
+        console.log(err);
+        reject(err);
+      });
+    });
+  }
+
   get _name() {
     return 'GitHubStorage';
   }
