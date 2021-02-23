@@ -107,6 +107,7 @@ class GitHubStorage extends _storageBackend.StorageBackend {
   async fetch(objectId, branch) {
     return new Promise(async (resolve, reject) => {
       (0, _githubApiHelper.getRepo)(objectId, branch, this.org, this.token).then(repo => {
+        console.log('repos', repo);
         let {
           author,
           metadata,
