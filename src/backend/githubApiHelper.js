@@ -303,6 +303,73 @@ async function setBranchToCommit(octo, org, repo, branch = `main`, commitSha) {
   })
 }
 
+
+/**
+ * Deletes a repository from Github
+ * @param {*} repoName
+ * @param {*} org
+ * @param {*} octo
+ */
+async function deleteRepo(repoName, org, octo){
+  return new Promise(async (resolve, reject) => {
+      octo.repos.delete({
+        owner: org,
+        repo: repoName,
+      }).then(()=>{
+        resolve({success: true})
+      }).catch((err)=>{
+        console.log(err);
+        reject(err)
+      })
+    
+  })
+
+}
+
+/**
+ * Deletes a file by path from Github
+ * @param {*} repoName
+ * @param {*} org
+ * @param {*} path
+ * @param {*} message
+ * @param {} branch
+ * @param {} octo
+ * @param {} repo
+ */
+async function deleteFile(repoName, org, path, branch='main', octo, repo){
+  return new Promise(async (resolve, reject) => {
+    // get sha of file by path       
+    let sha;
+    const message = `Removed file with path ${path}`
+    const entries = repo.lfsdata.entries
+    for (let i = 0; i < entries.length; i++) {
+      const entry = entries[i];
+      if (entry.path == path) {
+       sha = entry.object.oid
+      }
+    }
+   
+    if (sha == undefined){
+      reject("Unable to delete, file not found!")
+    }else{
+     octo.repos.deleteFile({
+       owner: org,
+       repo: repoName,
+       path,
+       message,
+       branch,
+       sha,
+     }).then(()=>{
+       resolve({success: true})
+     }).catch((err)=>{
+       console.log(err);
+       reject(err)
+     })
+    }
+  })
+
+}
+
 /**
  * Gets a specified repository by name from Github
  * @param {*} objectId
@@ -361,6 +428,17 @@ async function getRepo(objectId, branch, org, token) {
                   oid
                   text
                 }
+                ... on Tree {
+                  entries {
+                    name
+                    path
+                    object {
+                      ... on Blob {
+                        oid
+                      }
+                    }
+                  }
+                }
               }
             }
           }
@@ -378,37 +456,33 @@ async function getRepo(objectId, branch, org, token) {
     graphQLClient
       .request(query, variables)
       .then((data) => {
+
         const repoObj = data.repository
+        let repoInfo = {
+          sha: repoObj.ref.target.history.edges[0].node.oid,
+          description: repoObj.description,
+          createdAt: repoObj.createdAt,
+          updatedAt: repoObj.updatedAt,
+          author: repoObj.ref.target.history.edges[0].node.author,
+        }
+
         repoObj.object.entries.forEach((entry) => {
+          if (entry.name == 'data'){
+            repoInfo["lfsdata"] = entry.object           
+          }
           if (entry.name == 'datapackage.json') {
             let metadata = entry.object.text
-
             try {
               metadata = JSON.parse(metadata)
             } catch (error) {
               reject(error)
             }
-
-            let repoInfo = {
-              metadata: metadata,
-              description: repoObj.description,
-              createdAt: repoObj.createdAt,
-              updatedAt: repoObj.updatedAt,
-              author: repoObj.ref.target.history.edges[0].node.author,
-            }
-
-            resolve(repoInfo)
-          } else {
-            let repoInfo = {
-              metadata: {},
-              description: repoObj.description,
-              createdAt: repoObj.createdAt,
-              updatedAt: repoObj.updatedAt,
-              author: repoObj.ref.target.history.edges[0].node.author,
-            }
-            resolve(repoInfo)
+            repoInfo["metadata"] = metadata
           }
+
+          
         })
+        resolve(repoInfo)
       })
       .catch((error) => {
         reject(error)
@@ -416,4 +490,4 @@ async function getRepo(objectId, branch, org, token) {
   })
 }
 
-export { createRepo, uploadToRepo, getRepo, getFileBlobsAndPaths }
+export { createRepo, uploadToRepo, getRepo, getFileBlobsAndPaths, deleteRepo,deleteFile }
