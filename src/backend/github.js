@@ -8,7 +8,13 @@
 import { StorageBackend } from '../storageBackend'
 import dotenv from 'dotenv'
 import { Octokit } from '@octokit/rest'
-import { createRepo, uploadToRepo, getRepo } from './githubApiHelper'
+import {
+  createRepo,
+  uploadToRepo,
+  getRepo,
+  deleteRepo,
+  deleteFile,
+} from './githubApiHelper'
 
 dotenv.config()
 
@@ -177,6 +183,7 @@ class GitHubStorage extends StorageBackend {
           } else {
             filesToUpload = { metadata: newMetadata }
           }
+
           return uploadToRepo(
             this.octo,
             filesToUpload,
@@ -216,6 +223,51 @@ class GitHubStorage extends StorageBackend {
     } else {
       throw new Error(`Invalid package ID for the GitHub backend: ${objectId}`)
     }
+  }
+
+  /**
+   * Deletes contents from a repository with specified path
+   * @param {Object} options params from which repo is created, can be one of:
+   * options = {objectId: Unique repository name,
+   *            path: path of the file to delete, defaults to full repository,
+   *            message: commit message for files commited to the repo on github,
+   *            branch: main or master, branch on github to look for content
+   *            isResource: If you're deleting a metadata resource or not
+   */
+  async delete(options = { isResource: false }) {
+    return new Promise(async (resolve, reject) => {
+      const { objectId, path, branch, isResource } = options
+      if (!objectId) {
+        throw new Error('objectId name cannot be null')
+      }
+      const { org, repoName } = this._parseId(objectId)
+
+      getRepo(objectId, branch, org, this.token)
+        .then(async (repo) => {
+          if (isResource) {
+            return deleteFile(
+              repoName,
+              org,
+              path,
+              branch,
+              this.octo,
+              repo
+            )
+          } else {
+            return deleteRepo(
+              repoName,
+              org,
+              this.octo,
+            )
+          }
+        }).then((status) => {
+          resolve(status)
+        })
+        .catch((err) => {
+          console.log(err)
+          reject(err)
+        })
+    })
   }
 
   get _name() {

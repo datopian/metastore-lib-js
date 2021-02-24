@@ -107,6 +107,7 @@ class GitHubStorage extends _storageBackend.StorageBackend {
   async fetch(objectId, branch) {
     return new Promise(async (resolve, reject) => {
       (0, _githubApiHelper.getRepo)(objectId, branch, this.org, this.token).then(repo => {
+        console.log('repos', repo);
         let {
           author,
           metadata,
@@ -196,6 +197,41 @@ class GitHubStorage extends _storageBackend.StorageBackend {
     } else {
       throw new Error(`Invalid package ID for the GitHub backend: ${objectId}`);
     }
+  }
+
+  async delete(options = {
+    isResource: false
+  }) {
+    return new Promise(async (resolve, reject) => {
+      let {
+        objectId,
+        path,
+        branch,
+        isResource
+      } = options;
+
+      if (!objectId) {
+        throw new Error('objectId name cannot be null');
+      }
+
+      let {
+        org,
+        repoName
+      } = this._parseId(objectId);
+
+      (0, _githubApiHelper.getRepo)(objectId, branch, org, this.token).then(async repo => {
+        if (isResource) {
+          return (0, _githubApiHelper.deleteFile)(repoName, org, path, branch, this.octo, repo);
+        } else {
+          return (0, _githubApiHelper.deleteRepo)(repoName, org, this.octo);
+        }
+      }).then(status => {
+        resolve(status);
+      }).catch(err => {
+        console.log(err);
+        reject(err);
+      });
+    });
   }
 
   get _name() {
