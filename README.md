@@ -176,7 +176,6 @@ run();
     name: 'Test Financial File',
     resources: [ [Object] ],
     description: 'I updated the file',
-    revision: 0
   }
 }
 ```
@@ -222,7 +221,6 @@ run();
     name: 'Financial File',
     resources: [ [Object] ],
     description: 'I just updated this file in filesystem',
-    revision: 1
   }
 }
 

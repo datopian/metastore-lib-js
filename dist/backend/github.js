@@ -76,11 +76,6 @@ class GitHubStorage extends _storageBackend.StorageBackend {
         repoName
       } = this._parseId(objectId);
 
-      const revisionId = this._makeRevisionId();
-
-      const octo = this.octo;
-      metadata.revision = 0;
-      metadata.revisionId = revisionId;
       (0, _githubApiHelper.createRepo)(octo, org, repoName, description).then(() => {
         const filesToUpload = {
           metadata: metadata,
@@ -95,7 +90,7 @@ class GitHubStorage extends _storageBackend.StorageBackend {
           email: authorEmail
         };
 
-        const objectInfo = this._getObjectInfo(objectId, revisionId, author, description, metadata);
+        const objectInfo = this._getObjectInfo(objectId, author, description, metadata);
 
         resolve(objectInfo);
       }).catch(error => {
@@ -107,16 +102,14 @@ class GitHubStorage extends _storageBackend.StorageBackend {
   async fetch(objectId, branch) {
     return new Promise(async (resolve, reject) => {
       (0, _githubApiHelper.getRepo)(objectId, branch, this.org, this.token).then(repo => {
-        console.log('repos', repo);
         let {
           author,
           metadata,
           description,
           createdAt
         } = repo;
-        const revisionId = metadata['revisionId'] || '';
 
-        const objectInfo = this._getObjectInfo(objectId, revisionId, author, description, metadata, createdAt);
+        const objectInfo = this._getObjectInfo(objectId, author, description, metadata, createdAt);
 
         resolve(objectInfo);
       }).catch(error => {
@@ -146,7 +139,6 @@ class GitHubStorage extends _storageBackend.StorageBackend {
 
       let existingMetadata;
       let newMetadata;
-      let revisionId;
       let author;
       message = message || DEFAULT_COMMIT_MESSAGE;
       (0, _githubApiHelper.getRepo)(objectId, branch, org, this.token).then(async repo => {
@@ -160,8 +152,6 @@ class GitHubStorage extends _storageBackend.StorageBackend {
           name: authorName,
           email: authorEmail
         };
-        revisionId = this._makeRevisionId();
-        newMetadata.revision = 'revision' in existingMetadata ? existingMetadata['revision'] += 1 : 0;
         let filesToUpload;
 
         if (readMe) {
@@ -177,7 +167,7 @@ class GitHubStorage extends _storageBackend.StorageBackend {
 
         return (0, _githubApiHelper.uploadToRepo)(this.octo, filesToUpload, org, repoName, this.defaultBranch, this.lfsServerUrl, message);
       }).then(() => {
-        const objectInfo = this._getObjectInfo(objectId, revisionId, author, message, metadata);
+        const objectInfo = this._getObjectInfo(objectId, author, message, metadata);
 
         resolve(objectInfo);
       }).catch(error => {
@@ -203,7 +193,7 @@ class GitHubStorage extends _storageBackend.StorageBackend {
     isResource: false
   }) {
     return new Promise(async (resolve, reject) => {
-      let {
+      const {
         objectId,
         path,
         branch,
@@ -214,7 +204,7 @@ class GitHubStorage extends _storageBackend.StorageBackend {
         throw new Error('objectId name cannot be null');
       }
 
-      let {
+      const {
         org,
         repoName
       } = this._parseId(objectId);

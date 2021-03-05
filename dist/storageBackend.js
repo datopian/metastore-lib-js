@@ -26,9 +26,9 @@ class StorageBackend {
     return (0, _uuid.v4)();
   }
 
-  _getObjectInfo(objectId, revision, author, description, metadata, createdAt) {
+  _getObjectInfo(objectId, author, description, metadata, createdAt) {
     createdAt = createdAt || new Date();
-    let objectInfo = new _types.ObjectInfo(objectId, revision, createdAt, author, description, metadata).getInfo();
+    let objectInfo = new _types.ObjectInfo(objectId, createdAt, author, description, metadata).getInfo();
     return objectInfo;
   }
 

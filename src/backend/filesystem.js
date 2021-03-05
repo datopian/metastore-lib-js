@@ -25,7 +25,7 @@ class FilesystemStorage extends StorageBackend {
       throw new Error(`EEXIST: file ${objectId} already exists`)
     }
     const revisionId = this._makeRevisionId()
-    metadata.revision = 0
+    // metadata.revision = 0
     try {
       let filename = path.join(packageDir, 'datapackage.json')
       fs.writeFileSync(filename, JSON.stringify(metadata))
@@ -64,7 +64,7 @@ class FilesystemStorage extends StorageBackend {
     const revisionId = this._makeRevisionId()
 
     metadata = { ...currentObject, ...metadata }
-    metadata.revision = metadata.revision += 1
+    // metadata.revision = metadata.revision += 1
 
     try {
       let filename = path.join(packageDir, 'datapackage.json')
