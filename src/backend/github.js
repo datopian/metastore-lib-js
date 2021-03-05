@@ -73,10 +73,10 @@ class GitHubStorage extends StorageBackend {
       metadata = metadata || {}
 
       const { org, repoName } = this._parseId(objectId)
-      const revisionId = this._makeRevisionId()
-      const octo = this.octo
-      metadata.revision = 0
-      metadata.revisionId = revisionId
+      // const revisionId = this._makeRevisionId()
+      // const octo = this.octo
+      // metadata.revision = 0
+      // metadata.revisionId = revisionId
 
       createRepo(octo, org, repoName, description)
         .then(() => {
@@ -98,7 +98,7 @@ class GitHubStorage extends StorageBackend {
 
           const objectInfo = this._getObjectInfo(
             objectId,
-            revisionId,
+            // revisionId,
             author,
             description,
             metadata
@@ -121,11 +121,11 @@ class GitHubStorage extends StorageBackend {
       getRepo(objectId, branch, this.org, this.token)
         .then((repo) => {
           let { author, metadata, description, createdAt } = repo
-          const revisionId = metadata['revisionId'] || ''
+          // const revisionId = metadata['revisionId'] || ''
 
           const objectInfo = this._getObjectInfo(
             objectId,
-            revisionId,
+            // revisionId,
             author,
             description,
             metadata,
@@ -159,7 +159,7 @@ class GitHubStorage extends StorageBackend {
       let { org, repoName } = this._parseId(objectId)
       let existingMetadata
       let newMetadata
-      let revisionId
+      // let revisionId
       let author
 
       message = message || DEFAULT_COMMIT_MESSAGE
@@ -171,11 +171,11 @@ class GitHubStorage extends StorageBackend {
           const authorName = this.defaultAuthorName
           const authorEmail = this.defaultAuthorEmail
           author = { name: authorName, email: authorEmail }
-          revisionId = this._makeRevisionId()
-          newMetadata.revision =
-            'revision' in existingMetadata
-              ? (existingMetadata['revision'] += 1)
-              : 0
+          // revisionId = this._makeRevisionId()
+          // newMetadata.revision =
+          //   'revision' in existingMetadata
+          //     ? (existingMetadata['revision'] += 1)
+          //     : 0
 
           let filesToUpload
           if (readMe) {
@@ -197,7 +197,7 @@ class GitHubStorage extends StorageBackend {
         .then(() => {
           const objectInfo = this._getObjectInfo(
             objectId,
-            revisionId,
+            // revisionId,
             author,
             message,
             metadata

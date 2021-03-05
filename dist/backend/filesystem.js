@@ -32,8 +32,6 @@ class FilesystemStorage extends _storageBackend.StorageBackend {
 
     const revisionId = this._makeRevisionId();
 
-    metadata.revision = 0;
-
     try {
       let filename = _path.default.join(packageDir, 'datapackage.json');
 
@@ -71,7 +69,6 @@ class FilesystemStorage extends _storageBackend.StorageBackend {
     metadata = { ...currentObject,
       ...metadata
     };
-    metadata.revision = metadata.revision += 1;
 
     try {
       let filename = _path.default.join(packageDir, 'datapackage.json');
