@@ -125,7 +125,8 @@ class GitHubStorage extends _storageBackend.StorageBackend {
         metadata,
         message,
         branch,
-        readMe
+        readMe,
+        loadPkgJson
       } = options;
 
       if (!objectId) {
@@ -141,7 +142,7 @@ class GitHubStorage extends _storageBackend.StorageBackend {
       let newMetadata;
       let author;
       message = message || DEFAULT_COMMIT_MESSAGE;
-      (0, _githubApiHelper.getRepo)(objectId, branch, org, this.token).then(async repo => {
+      (0, _githubApiHelper.getRepo)(objectId, branch, org, this.token, loadPkgJson).then(async repo => {
         existingMetadata = repo.metadata;
         newMetadata = { ...existingMetadata,
           ...metadata
