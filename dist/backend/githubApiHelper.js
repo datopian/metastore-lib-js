@@ -267,7 +267,7 @@ async function deleteFile(repoName, org, path, branch = 'main', octo, repo) {
   });
 }
 
-async function getRepo(objectId, branch, org, token) {
+async function getRepo(objectId, branch, org, token, loadPkgJson) {
   return new Promise(async (resolve, reject) => {
     const owner = org;
     branch = branch || 'main';
@@ -358,10 +358,14 @@ async function getRepo(objectId, branch, org, token) {
         if (entry.name == 'datapackage.json') {
           let metadata = entry.object.text;
 
-          try {
-            metadata = JSON.parse(metadata);
-          } catch (error) {
-            reject(error);
+          if (!typeof loadPkgJson) {
+            try {
+              metadata = JSON.parse(metadata);
+            } catch (error) {
+              reject(error);
+            }
+          } else {
+            metadata = {};
           }
 
           repoInfo["metadata"] = metadata;

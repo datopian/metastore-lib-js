@@ -148,10 +148,11 @@ class GitHubStorage extends StorageBackend {
    *            message: commit message for files commited to the repo on github,
    *            branch: main or master, branch on github to look for content
    *            readMe: A markdown flavored text of the repository's README}
+   *            loadPkgJson: determine if datapackage.json should be loaded into metadata
    */
   async update(options = {}) {
     return new Promise(async (resolve, reject) => {
-      let { objectId, metadata, message, branch, readMe } = options
+      let { objectId, metadata, message, branch, readMe, loadPkgJson } = options
 
       if (!objectId) {
         throw new Error('objectId name cannot be null')
@@ -164,7 +165,7 @@ class GitHubStorage extends StorageBackend {
 
       message = message || DEFAULT_COMMIT_MESSAGE
 
-      getRepo(objectId, branch, org, this.token)
+      getRepo(objectId, branch, org, this.token, loadPkgJson)
         .then(async (repo) => {
           existingMetadata = repo.metadata
           newMetadata = { ...existingMetadata, ...metadata }
